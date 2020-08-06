@@ -1,8 +1,8 @@
 clc; clear all; close all;
 
 %load data
-train = csvread('train.csv',1,1);
-test = csvread('test.csv',1,1);
+train = csvread('../data/train.csv',1,0);
+test = csvread('../data/test.csv',1,0);
 
 %define copula family
 global family 
