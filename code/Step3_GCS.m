@@ -16,9 +16,9 @@ while K > 0
     LL_all = 0;
 for j=1:K
     n = length(seg{j});
-    LL_segorig = LL(seg{j},seg{j});
+    LL_segorig = LL(seg{j});
     for k=2:n-2
-        LL_all(j,k) = LL(seg{j}(1:k,:),seg{j}(1:k,:)) + LL(seg{j}(k+1:n,:),seg{j}(k+1:n,:)) - LL_segorig;
+        LL_all(j,k) = LL(seg{j}(1:k,:)) + LL(seg{j}(k+1:n,:)) - LL_segorig;
     end
 end
 
@@ -39,11 +39,7 @@ end
 %Result
 OptimalPeriod = seg{length(seg)};
 
-%test set loglikelihood
-LL_train = LL(train,test)
-LL_optimal = LL(OptimalPeriod,test)
-
-function loglikelihood = LL(x,data)
+function loglikelihood = LL(x)
     global family
     %marginal distribution fitting
     exp_pd = fitdist(x(:,1),'Exp');
@@ -55,6 +51,11 @@ function loglikelihood = LL(x,data)
     paramhat = copulafit(family,[exp_cdf gam_cdf]);
 
     %loglikelihood
-    loglikelihood = log(prod(copulapdf(family,[cdf(exp_pd,data(:,1)),cdf(gam_pd,data(:,2))],paramhat),'All'));
+    loglikelihood = log(prod(copulapdf(family,[cdf(exp_pd,x(:,1)),cdf(gam_pd,x(:,2))],paramhat),'All'));
 end
+    
+    
+    
+    
+    
 
