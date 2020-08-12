@@ -27,14 +27,13 @@ true_prob = copulacdf(family,[exp_cdf_test,gam_cdf_test],paramhat_test);
 train_prob = copulacdf(family,[cdf(exp_pd_train,test(:,1)),cdf(gam_pd_train,test(:,1))],paramhat_train);
 optimal_prob = copulacdf(family,[cdf(exp_pd_optimal,test(:,1)),cdf(gam_pd_optimal,test(:,1))],paramhat_optimal);
 
-%rmse
+%root mean squared error (rmse)
 rmse_train = sqrt(mean((true_prob - train_prob).^2));
 rmse_optimal = sqrt(mean((true_prob - optimal_prob).^2));
 
-%mape 
+%mean absolute percentage error (mape)
 mape_train = mean(abs((true_prob - train_prob)./true_prob));
 mape_optimal = mean(abs((true_prob - optimal_prob)./true_prob));
 
-mape_train
-mape_optimal
+%median absolute deviation (MAD)
 
