@@ -1,12 +1,14 @@
 clc; clear all; close all;
 
 %load data
-train = csvread('../data/train.csv',1,0);
-test = csvread('../data/test.csv',1,0);
+alldata = csvread('../data/alldata.csv',1,0);
+Q = 90;
+train = alldata(1:Q,:);
+test = alldata(Q+1:length(alldata),:);
 
 %define copula family
 global family 
-family = 'Clayton';
+family = 'Gumbel';
 
 %greedy copula segmentation
 K = 1;
@@ -53,9 +55,4 @@ function loglikelihood = LL(x)
     %loglikelihood
     loglikelihood = log(prod(copulapdf(family,[cdf(exp_pd,x(:,1)),cdf(gam_pd,x(:,2))],paramhat),'All'));
 end
-    
-    
-    
-    
-    
 
