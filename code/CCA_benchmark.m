@@ -3,8 +3,8 @@ clc; clear all; close all;
 %define copula family
 global family lambda 
 family = 'Clayton';
-lambda = 10000; %regularization parameter
-num_rz = 30;
+lambda = 500; %regularization parameter
+num_rz = 10;
 enforced_run = true; %continue the algorithm even though regularization is not good enough
 do_plot = false;
 
@@ -16,8 +16,8 @@ for rz = 1:num_rz
     n = [400;300;300];
     alpha = [1;10;50];
     rate = [5;10;15];
-    mu = [1;2;3];
-    sigma = [1;1;1];
+    mu = [0.6628;1.0849;1.3785]; % [2,3,4]
+    sigma = [0.2462;0.1655;0.1245]; % [0.5,0.5,0.5]
     data = benchmark_generator(n,alpha,rate,mu,sigma);
 
     %define variables
@@ -78,6 +78,12 @@ for rz = 1:num_rz
             ln_pd = fitdist(train(:,2),'Lognormal');
             ln_cdf = cdf(ln_pd,train(:,2));
             paramhat = copulafit(family,[poi_cdf ln_cdf]);
+            
+            poi_pd_test = fitdist(test(:,1),'Poisson');
+            poi_cdf_test = cdf(poi_pd_test,test(:,1));
+            ln_pd_test = fitdist(test(:,2),'Lognormal');
+            ln_cdf_test = cdf(ln_pd_test,test(:,2));
+            paramhat_test = copulafit(family,[poi_cdf_test ln_cdf_test]);
 
             %Test LL
             loglikelihood_GCS(itr) = log(prod(copulapdf(family,[cdf(poi_pd_GCS,test(:,1)),cdf(ln_pd_GCS,test(:,2))],paramhat_GCS),'All'));
@@ -94,7 +100,7 @@ csvwrite(strcat('../outputs/bm_result_l_',num2str(lambda),'.csv'),result);
 csvwrite(strcat('../outputs/bm_result_GCS_l_',num2str(lambda),'.csv'),result_GCS);
 
 if do_plot
-    diff = result_GCS - result;
+    diff = 100 * (result_GCS - result) ./ result_GCS;
     mean_diff = mean(diff);
     std_diff = std(diff);
 
@@ -105,9 +111,9 @@ if do_plot
     line2 = plot(min(diff),'k');
     line3 = plot(max(diff),'k');
     xticks([1 2 3 4 5 6]);
-    xlabel('Update Cycle');
-    ylabel('LL differences');
-    saveas(gcf,'../plots/BenchmarkCCAResults.png');
+    xlabel('m');
+    ylabel('\delta_L_L (%)');
+    %saveas(gcf,'../plots/BenchmarkCCAResults.png');
 end
 
 function loglikelihood = LL(x)

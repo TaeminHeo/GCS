@@ -10,7 +10,7 @@ fnames = {fnames.name};
 %define copula family
 global family lambda 
 family = 'Gumbel';
-lambda = 150; %150
+lambda = 100; %150
 do_plot = true;
 
 %define variables
@@ -78,15 +78,15 @@ csvwrite(strcat('../outputs/dr_b',num2str(base),'u',num2str(cycle),'_result_l_',
 csvwrite(strcat('../outputs/dr_b',num2str(base),'u',num2str(cycle),'_result_GCS_l_',num2str(lambda),'.csv'),loglikelihood_GCS);
 
 if do_plot
-    plot(1:fix((total-base)/cycle),loglikelihood_GCS,'k-')
-    hold on
-    plot(1:fix((total-base)/cycle),loglikelihood,'k--')
-    legend('GCS','Traditional')
+    plot(1:fix((total-base)/cycle),100*(loglikelihood_GCS - loglikelihood) ./ abs(loglikelihood_GCS),'k-')
+    %hold on
+    %plot(1:fix((total-base)/cycle),loglikelihood,'k--')
+    %legend('GCS','Traditional')
     xticks(1:fix((total-base)/cycle));
     xlim([1 fix((total-base)/cycle)]);
-    xlabel('Update Cycle');
-    ylabel('Predictive LL');
-    saveas(gcf,'../plots/DroughtCCAResults.png');
+    xlabel('m');
+    ylabel('\delta_L_L (%)');
+    saveas(gcf,strcat('../plots/DroughtCCAResults',num2str(lambda),'.png'));
 end
 
 function loglikelihood = LL(x)
