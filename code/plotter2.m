@@ -1,4 +1,6 @@
-lambda = 500
+close all;
+
+lambda = 500;
 result = load(strcat('../outputs/bm_result_l_',num2str(lambda),'.csv'));
 result_GCS = load(strcat('../outputs/bm_result_GCS_l_',num2str(lambda),'.csv'));
 
@@ -9,12 +11,12 @@ std_diff = std(diff);
 x=1:1:6;
 figure()
 set(gca,'FontSize',12)
-patch([x fliplr(x)], [min(diff) fliplr(max(diff))],[0.8 0.8 0.8]);
+bar([0,100,200,300,400,500],mean_diff,'Facecolor',[0.9,0.9,0.9]);
 hold on
-line1 = plot(mean_diff,'k');
-line2 = plot(min(diff),'k');
-line3 = plot(max(diff),'k');
-xticks([1 2 3 4 5 6]);
-xlabel('m');
+grid on
+er = errorbar([0,100,200,300,400,500],mean_diff,min(diff)-mean_diff,max(diff)-mean_diff,'k','LineStyle','none');
+xlim([-80,580])
+xlabel('Number of additional samples following the first 400 samples');
 ylabel('\delta_L_L (%)');
-saveas(gcf,strcat('../plots/BenchmarkCCAResults_',num2str(lambda),'.png'));
+legend(er,'min-max errorbars','Location','northwest');
+print(gcf,strcat('../plots/BenchmarkCCAResults_',num2str(lambda),'.png'),'-dpng','-r300');

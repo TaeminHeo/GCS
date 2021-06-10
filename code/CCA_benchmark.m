@@ -96,8 +96,8 @@ for rz = 1:num_rz
     result(rz,:) = loglikelihood;
 end
 
-csvwrite(strcat('../outputs/bm_result_l_',num2str(lambda),'.csv'),result);
-csvwrite(strcat('../outputs/bm_result_GCS_l_',num2str(lambda),'.csv'),result_GCS);
+%csvwrite(strcat('../outputs/bm_result_l_',num2str(lambda),'.csv'),result);
+%csvwrite(strcat('../outputs/bm_result_GCS_l_',num2str(lambda),'.csv'),result_GCS);
 
 if do_plot
     diff = 100 * (result_GCS - result) ./ result_GCS;

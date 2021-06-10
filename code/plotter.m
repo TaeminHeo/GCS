@@ -13,7 +13,7 @@ xlabel('k');
 ylabel('$\Psi_{k\backslash k+1}$','interpreter','latex');
 ylim([0 300]);
 legend(s,'max (k=722)','Location','best');
-print('../plots/Psi_1','-dpng','-r300');
+%print('../plots/Psi_1','-dpng','-r300');
 
 figure(2)
 set(gca,'FontSize',12)
@@ -36,4 +36,4 @@ plot([722:999],LL_all_2(2,1:278),'k');
 xlabel('k');
 ylabel('$\Psi_{k\backslash k+1}$','interpreter','latex');
 ylim([-20 80])
-print('../plots/Psi_2','-dpng','-r300');
+%print('../plots/Psi_2','-dpng','-r300');
