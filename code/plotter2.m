@@ -1,10 +1,10 @@
 close all;
 
-lambda = 500;
+lambda = 10;
 result = load(strcat('../outputs/bm_result_l_',num2str(lambda),'.csv'));
 result_GCS = load(strcat('../outputs/bm_result_GCS_l_',num2str(lambda),'.csv'));
 
-diff = 100 * (result_GCS - result) ./ abs(result_GCS);
+diff = 100 * (result_GCS - result) ./ abs(result);
 mean_diff = mean(diff);
 std_diff = std(diff);
 

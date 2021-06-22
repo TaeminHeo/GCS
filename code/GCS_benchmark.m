@@ -6,7 +6,7 @@ train = csvread('../data/toyproblem.csv');
 %define copula family
 global family lambda 
 family = 'Clayton';
-lambda = 1000; %regularization parameter
+lambda = 100; %regularization parameter
 
 %greedy copula segmentation
 K = 1;
@@ -47,17 +47,17 @@ OptimalPeriod = seg{length(seg)};
 function loglikelihood = LL(x)
     global family lambda
     %marginal distribution fitting
-    poi_pd = fitdist(x(:,1),'Poisson');
-    poi_cdf = cdf(poi_pd,x(:,1));
-    poi_var = var(x(:,1));
-    ln_pd = fitdist(x(:,2),'Lognormal');
-    ln_cdf = cdf(ln_pd,x(:,2));
-    ln_var = var(x(:,2));
+    pd1 = fitdist(x(:,1),'Gamma');
+    cdf1 = cdf(pd1,x(:,1));
+    var1 = var(x(:,1));
+    pd2 = fitdist(x(:,2),'Lognormal');
+    cdf2 = cdf(pd2,x(:,2));
+    var2 = var(x(:,2));
 
     %copula fitting
-    paramhat = copulafit(family,[poi_cdf ln_cdf]);
+    paramhat = copulafit(family,[cdf1 cdf2]);
 
     %loglikelihood
-    loglikelihood = log(prod(copulapdf(family,[cdf(poi_pd,x(:,1)),cdf(ln_pd,x(:,2))],paramhat),'All')) - lambda / (poi_var + ln_var);
+    loglikelihood = sum(log(copulapdf(family,[cdf1,cdf2],paramhat))) - lambda / (var1 + var2);
 end
 

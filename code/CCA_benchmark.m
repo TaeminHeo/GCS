@@ -3,22 +3,23 @@ clc; clear all; close all;
 %define copula family
 global family lambda 
 family = 'Clayton';
-lambda = 500; %regularization parameter
+lambda = 100; %regularization parameter
 num_rz = 10;
 enforced_run = true; %continue the algorithm even though regularization is not good enough
-do_plot = false;
 
 result = zeros(num_rz,6);
 result_GCS = zeros(num_rz,6);
 
 for rz = 1:num_rz
     disp(rz);
-    n = [400;300;300];
+    n = [300;300;400];
     alpha = [1;10;50];
-    rate = [5;10;15];
+    shape = [10;40;100]; 
+    scale = [0.5;0.25;0.15];
     mu = [0.6628;1.0849;1.3785]; % [2,3,4]
     sigma = [0.2462;0.1655;0.1245]; % [0.5,0.5,0.5]
-    data = benchmark_generator(n,alpha,rate,mu,sigma);
+    
+    data = benchmark_generator(n,alpha,mu,sigma,shape,scale);
 
     %define variables
     period = 1000;
@@ -29,8 +30,8 @@ for rz = 1:num_rz
 
         for itr=1:6
             %load data     
-            train = data(1:400+cycle*(itr-1),:);
-            test = data(400+cycle*(itr-1)+1:400+cycle*itr,:);
+            train = data(1:base+cycle*(itr-1),:);
+            test = data(base+cycle*(itr-1)+1:base+cycle*itr,:);
 
             %greedy copula segmentation
             K = 1;
@@ -67,27 +68,27 @@ for rz = 1:num_rz
             clear seg;
 
             %Joint Dist. Params. Estimation
-            poi_pd_GCS = fitdist(OptimalPeriod(:,1),'Poisson');
-            poi_cdf_GCS = cdf(poi_pd_GCS,OptimalPeriod(:,1));
+            gam_pd_GCS = fitdist(OptimalPeriod(:,1),'Gamma');
+            gam_cdf_GCS = cdf(gam_pd_GCS,OptimalPeriod(:,1));
             ln_pd_GCS = fitdist(OptimalPeriod(:,2),'Lognormal');
             ln_cdf_GCS = cdf(ln_pd_GCS,OptimalPeriod(:,2));
-            paramhat_GCS = copulafit(family,[poi_cdf_GCS ln_cdf_GCS]);
+            paramhat_GCS = copulafit(family,[gam_cdf_GCS ln_cdf_GCS]);
 
-            poi_pd = fitdist(train(:,1),'Poisson');
-            poi_cdf = cdf(poi_pd,train(:,1));
+            gam_pd = fitdist(train(:,1),'Gamma');
+            gam_cdf = cdf(gam_pd,train(:,1));
             ln_pd = fitdist(train(:,2),'Lognormal');
             ln_cdf = cdf(ln_pd,train(:,2));
-            paramhat = copulafit(family,[poi_cdf ln_cdf]);
+            paramhat = copulafit(family,[gam_cdf ln_cdf]);
             
-            poi_pd_test = fitdist(test(:,1),'Poisson');
-            poi_cdf_test = cdf(poi_pd_test,test(:,1));
+            gam_pd_test = fitdist(test(:,1),'Gamma');
+            gam_cdf_test = cdf(gam_pd_test,test(:,1));
             ln_pd_test = fitdist(test(:,2),'Lognormal');
             ln_cdf_test = cdf(ln_pd_test,test(:,2));
-            paramhat_test = copulafit(family,[poi_cdf_test ln_cdf_test]);
+            paramhat_test = copulafit(family,[gam_cdf_test ln_cdf_test]);
 
             %Test LL
-            loglikelihood_GCS(itr) = log(prod(copulapdf(family,[cdf(poi_pd_GCS,test(:,1)),cdf(ln_pd_GCS,test(:,2))],paramhat_GCS),'All'));
-            loglikelihood(itr) = log(prod(copulapdf(family,[cdf(poi_pd,test(:,1)),cdf(ln_pd,test(:,2))],paramhat),'All'));
+            loglikelihood_GCS(itr) = sum(log(copulapdf(family,[cdf(gam_pd_GCS,test(:,1)),cdf(ln_pd_GCS,test(:,2))],paramhat_GCS)));
+            loglikelihood(itr) = sum(log(copulapdf(family,[cdf(gam_pd,test(:,1)),cdf(ln_pd,test(:,2))],paramhat)));
         end
     if (sum(loglikelihood_GCS < 0)  > 0) & (~enforced_run)
         break
@@ -96,48 +97,31 @@ for rz = 1:num_rz
     result(rz,:) = loglikelihood;
 end
 
-%csvwrite(strcat('../outputs/bm_result_l_',num2str(lambda),'.csv'),result);
-%csvwrite(strcat('../outputs/bm_result_GCS_l_',num2str(lambda),'.csv'),result_GCS);
-
-if do_plot
-    diff = 100 * (result_GCS - result) ./ result_GCS;
-    mean_diff = mean(diff);
-    std_diff = std(diff);
-
-    x=1:1:6;
-    patch([x fliplr(x)], [min(diff) fliplr(max(diff))],[0.8 0.8 0.8]);
-    hold on
-    line1 = plot(mean_diff,'k');
-    line2 = plot(min(diff),'k');
-    line3 = plot(max(diff),'k');
-    xticks([1 2 3 4 5 6]);
-    xlabel('m');
-    ylabel('\delta_L_L (%)');
-    %saveas(gcf,'../plots/BenchmarkCCAResults.png');
-end
+csvwrite(strcat('../outputs/bm_result_l_',num2str(lambda),'.csv'),result);
+csvwrite(strcat('../outputs/bm_result_GCS_l_',num2str(lambda),'.csv'),result_GCS);
 
 function loglikelihood = LL(x)
     global family lambda
     %marginal distribution fitting
-    poi_pd = fitdist(x(:,1),'Poisson');
-    poi_cdf = cdf(poi_pd,x(:,1));
-    poi_var = var(x(:,1));
-    ln_pd = fitdist(x(:,2),'Lognormal');
-    ln_cdf = cdf(ln_pd,x(:,2));
-    ln_var = var(x(:,2));
+    pd1 = fitdist(x(:,1),'Gamma');
+    cdf1 = cdf(pd1,x(:,1));
+    var1 = var(x(:,1));
+    pd2 = fitdist(x(:,2),'Lognormal');
+    cdf2 = cdf(pd2,x(:,2));
+    var2 = var(x(:,2));
 
     %copula fitting
-    paramhat = copulafit(family,[poi_cdf ln_cdf]);
+    paramhat = copulafit(family,[cdf1 cdf2]);
 
     %loglikelihood
-    loglikelihood = log(prod(copulapdf(family,[cdf(poi_pd,x(:,1)),cdf(ln_pd,x(:,2))],paramhat),'All')) - lambda / (poi_var + ln_var);
+    loglikelihood = sum(log(copulapdf(family,[cdf1,cdf2],paramhat))) - lambda / (var1 + var2);
 end
 
-function x = benchmark_generator(n,alpha,rate,mu,sigma)
+function x = benchmark_generator(n,alpha,mu,sigma,shape,scale)
     global family
     for i=1:length(n)
         u = copularnd(family,alpha(i),n(i));
-        pd1 = makedist('Poisson','lambda',rate(i));
+        pd1 = makedist('Gamma','a',shape(i),'b',scale(i));
         pd2 = makedist('Lognormal','mu',mu(i),'sigma',sigma(i));
         if exist('x1','var')
             x1 = [x1;icdf(pd1,u(:,1))];

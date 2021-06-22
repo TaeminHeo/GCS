@@ -43,5 +43,5 @@ title('X_2 breakpoint at k=722');
 grid on;
 xlim([0,30])
 ylim([0,6])
-print(gcf,strcat('../plots/greedy_compare.png'),'-dpng','-r300');
+%print(gcf,strcat('../plots/greedy_compare.png'),'-dpng','-r300');
 
