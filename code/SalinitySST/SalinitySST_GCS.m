@@ -1,12 +1,12 @@
 clc; clear all; close all;
 
 %load data
-train = csvread('../../data/Benchmark/toyproblem.csv');
+train = csvread('../../data/SalinitySST/SalinitySST.csv',1,0);
 
 %define copula family
 global family lambda 
-family = 'Clayton';
-lambda = 100; %regularization parameter
+family = 'Gumbel';
+lambda = 0; %regularization parameter
 
 %greedy copula segmentation
 K = 1;
@@ -17,10 +17,11 @@ while K > 0
 for j=1:K
     n = length(seg{j});
     LL_segorig = LL(seg{j});
-    for k=2:n-2
+    for k=3:n-3
         LL_all(j,k) = LL(seg{j}(1:k,:)) + LL(seg{j}(k+1:n,:)) - LL_segorig;
     end
     if K == 1
+        plot(LL_all)
         LL_all_1 = LL_all;
     elseif K == 2
         LL_all_2 = LL_all;
@@ -47,11 +48,14 @@ OptimalPeriod = seg{length(seg)};
 function loglikelihood = LL(x)
     global family lambda
     %marginal distribution fitting
-    pd1 = fitdist(x(:,1),'Gamma');
-    cdf1 = cdf(pd1,x(:,1));
+    %pd1 = fitdist(x(:,1),'Normal');
+    %cdf1 = cdf(pd1,x(:,1));
+    [cdf1,xi,bw] = ksdensity(x(:,1),x(:,1),'Function','cdf');
     var1 = var(x(:,1));
-    pd2 = fitdist(x(:,2),'Lognormal');
-    cdf2 = cdf(pd2,x(:,2));
+    
+    %pd2 = fitdist(x(:,2),'Normal');
+    %cdf2 = cdf(pd2,x(:,2));
+    [cdf2,xi,bw] = ksdensity(x(:,2),x(:,2),'Function','cdf');
     var2 = var(x(:,2));
 
     %copula fitting
